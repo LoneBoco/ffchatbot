@@ -12,3 +12,13 @@ ConnectWindow::~ConnectWindow()
 {
 	delete ui;
 }
+
+QString ConnectWindow::getUsername() const
+{
+	return ui->editUsername->text();
+}
+
+QString ConnectWindow::getPassword() const
+{
+	return ui->editPassword->text();
+}

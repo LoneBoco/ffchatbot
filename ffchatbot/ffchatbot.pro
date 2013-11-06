@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,3 +28,5 @@ else:unix: LIBS += -L$$OUT_PWD/../qxmpp/src/ -lqxmpp_d
 
 INCLUDEPATH += $$PWD/../qxmpp/src
 DEPENDPATH += $$PWD/../qxmpp/src
+
+CONFIG += c++11
