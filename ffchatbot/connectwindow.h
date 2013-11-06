@@ -15,6 +15,9 @@ public:
 	explicit ConnectWindow(QWidget *parent = 0);
 	~ConnectWindow();
 
+	QString getUsername() const;
+	QString getPassword() const;
+
 private:
 	Ui::ConnectWindow *ui;
 };
