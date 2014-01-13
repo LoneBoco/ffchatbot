@@ -218,6 +218,7 @@ public slots:
     void connectToServer(const QString &jid,
                          const QString &password);
     void disconnectFromServer();
+    bool sendElement(const QXmppElement&);
     bool sendPacket(const QXmppStanza&);
     void sendMessage(const QString& bareJid, const QString& message);
 
