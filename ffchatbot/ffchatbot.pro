@@ -14,19 +14,25 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    connectwindow.cpp
+    connectwindow.cpp \
+    xmppclient.cpp \
+    prefixmanager.cpp
 
 HEADERS  += mainwindow.h \
-    connectwindow.h
+    connectwindow.h \
+    xmppclient.h \
+    prefixmanager.h
 
 FORMS    += mainwindow.ui \
     connectwindow.ui
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qxmpp/src/ -lqxmpp
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qxmpp/src/ -lqxmpp_d0
-else:unix: LIBS += -L$$OUT_PWD/../qxmpp/src/ -lqxmpp_d
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../bin/ -lqxmpp
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../bin/ -lqxmpp_d0
+else:unix: LIBS += -L$$PWD/../bin/ -lqxmpp_d
 
-INCLUDEPATH += $$PWD/../qxmpp/src
-DEPENDPATH += $$PWD/../qxmpp/src
+INCLUDEPATH += $$PWD/../qxmpp/src $$PWD/../qxmpp/src/base $$PWD/../qxmpp/src/client
+DEPENDPATH += $$PWD/../qxmpp/src $$PWD/../qxmpp/src/base $$PWD/../qxmpp/src/client
 
 CONFIG += c++11
+
+DESTDIR = $$PWD/../bin
