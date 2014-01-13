@@ -27,6 +27,8 @@ private:
 
 	QByteArray userID;
 	QByteArray userSecret;
+	QByteArray userCharacter;
+	QByteArray userGUID;
 
 	static const QString salt1;
 	static const QString salt2;
