@@ -300,6 +300,41 @@ void QXmppClient::connectToServer(const QString &jid, const QString &password)
 }
 
 /// After successfully connecting to the server use this function to send
+/// a custom element to the server.
+///
+/// \return Returns true if the element was sent, false otherwise.
+///
+/// Following code snippet illustrates how to send a message using this function:
+/// \code
+/// QXmppElement message;
+/// message.setTagName("message");
+/// message.setAttribute("xml:lang", "*");
+/// message.setAttribute("to", to_jid);
+/// message.setAttribute("from", from_jid);
+/// message.setAttribute("type", "normal");
+/// message.setAttribute("displayname", "custom attribute");
+///
+/// QXmppElement body;
+/// body.setTagName("body");
+/// body.setValue("Body message");
+///
+/// message.appendChild(body);
+/// client.sendElement(message);
+/// \endcode
+///
+/// \param element Any QXmppElement with any number of children.
+///
+
+bool QXmppClient::sendElement(const QXmppElement& element)
+{
+    QByteArray output;
+    QXmlStreamWriter writer(&output);
+    element.toXml(&writer);
+
+    return d->stream->sendData(output);
+}
+
+/// After successfully connecting to the server use this function to send
 /// stanzas to the server. This function can solely be used to send various kind
 /// of stanzas to the server. QXmppStanza is a parent class of all the stanzas
 /// QXmppMessage, QXmppPresence, QXmppIq, QXmppBind, QXmppRosterIq, QXmppSession
