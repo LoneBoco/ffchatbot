@@ -24,6 +24,8 @@ public:
 	void send_pm(QString jid, QString msg);
 
 protected:
+	QString _getLoginMessage() const;
+
 	QString _character;
 	QString _secret;
 	const QString _server;
