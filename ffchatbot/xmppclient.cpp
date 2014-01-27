@@ -138,6 +138,12 @@ void XmppClient::clientConnected()
 
 void XmppClient::messageReceived(const QXmppMessage& message)
 {
+	// Get the message and take action upon it.
+	QString m = message.body();
+	if (m == "listonline" || m == "listusers")
+	{
+		send_pm(message.from(), _getLoginMessage());
+	}
 }
 
 void XmppClient::muc_messageReceived(const QXmppMessage& message)
@@ -200,35 +206,7 @@ void XmppClient::muc_userJoined(const QString& jid)
 	}
 
 	// Send the user a list of everybody online.
-	message.clear();
-	int total_users = 0;
-	for (auto i = rooms.begin(); i != rooms.end(); ++i)
-	{
-		QXmppMucRoom* r = *i;
-
-		QString p = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(r->jid()));
-		auto participants = r->participants();
-		if (participants.length() > 1)
-		{
-			total_users += participants.length() - 1;
-			message.append(". ");
-			message.append("[" + p + "]: ");
-			for (auto j = participants.begin(); j != participants.end(); ++j)
-			{
-				// Don't count myself.
-				QString cu = QXmppUtils::jidToResource(*j);
-				if (cu.toUpper() == _character.toUpper())
-					continue;
-
-				message.append(cu);
-				message.append(", ");
-			}
-			message.remove(message.length() - 2, 2);
-		}
-	}
-	message.insert(0, "Users online [" + QString::number(total_users) + "]");
-
-	send_pm(jid, message);
+	send_pm(jid, _getLoginMessage());
 }
 
 void XmppClient::muc_userLeft(const QString& jid)
@@ -273,4 +251,37 @@ void XmppClient::muc_error_timeout()
 {
 	_reconnect_timer.stop();
 	this->connect(_character, _secret);
+}
+
+QString XmppClient::_getLoginMessage() const
+{
+	QString message;
+	int total_users = 0;
+	auto rooms = _muc_manager->rooms();
+	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	{
+		QXmppMucRoom* r = *i;
+
+		QString p = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(r->jid()));
+		auto participants = r->participants();
+		if (participants.length() > 1)
+		{
+			total_users += participants.length() - 1;
+			message.append(". ");
+			message.append("[" + p + "]: ");
+			for (auto j = participants.begin(); j != participants.end(); ++j)
+			{
+				// Don't count myself.
+				QString cu = QXmppUtils::jidToResource(*j);
+				if (cu.toUpper() == _character.toUpper())
+					continue;
+
+				message.append(cu);
+				message.append(", ");
+			}
+			message.remove(message.length() - 2, 2);
+		}
+	}
+	message.insert(0, "Users online [" + QString::number(total_users) + "]");
+	return message;
 }

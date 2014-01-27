@@ -57,4 +57,4 @@ equals(QXMPP_LIBRARY_TYPE,staticlib) {
 unix:QMAKE_CLEAN += -r pkgconfig lib$${TARGET}.prl
 
 
-DESTDIR = $$PWD/../../bin
+#DESTDIR = $$PWD/../../bin
