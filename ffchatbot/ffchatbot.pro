@@ -37,4 +37,4 @@ DEPENDPATH += $$PWD/../qxmpp/src $$PWD/../qxmpp/src/base $$PWD/../qxmpp/src/clie
 CONFIG += c++11
 CONFIG += console
 
-#DESTDIR = $$PWD/../bin
+DESTDIR = $$PWD/../bin
