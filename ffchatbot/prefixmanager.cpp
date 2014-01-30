@@ -46,6 +46,7 @@ QString PrefixManager::remove_prefix(QString prefix)
 			return ret;
 		}
 	}
+	return QString();
 }
 
 QStringList PrefixManager::get_all_prefixes()
