@@ -20,6 +20,7 @@ public:
 
 	void connect(QString character, QString secret);
 	void add_channel(QString channel);
+	void remove_channel(QString channel);
 
 	void send_pm(QString jid, QString msg);
 
