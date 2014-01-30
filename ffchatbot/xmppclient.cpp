@@ -94,6 +94,30 @@ void XmppClient::add_channel(QString channel)
 	room->join();
 }
 
+void XmppClient::remove_channel(QString channel)
+{
+	QXmppMucRoom* room = nullptr;
+
+	// Find the room.
+	auto rooms = _muc_manager->rooms();
+	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	{
+		QXmppMucRoom* r = *i;
+		if (QXmppUtils::jidToUser(r->jid()).toUpper() == channel.toUpper())
+		{
+			room = r;
+			break;
+		}
+	}
+
+	// If the room doesn't exist, just return.
+	if (room == nullptr)
+		return;
+
+	// Leave.
+	room->leave();
+}
+
 void XmppClient::send_pm(QString jid, QString msg)
 {
 	// Message element.
@@ -138,11 +162,63 @@ void XmppClient::clientConnected()
 
 void XmppClient::messageReceived(const QXmppMessage& message)
 {
-	// Get the message and take action upon it.
 	QString m = message.body();
+
+	// Check for a help command.
+	if (m.startsWith("help", Qt::CaseInsensitive))
+	{
+		if (m == "help")
+		{
+			QString msg = "Commands: listonline/listusers, listrooms, join, leave";
+			send_pm(message.from(), msg);
+		}
+		else if (m == "help listonline" || m == "help listusers")
+			send_pm(message.from(), "Gets a list of all online users.");
+		else if (m == "help listrooms")
+			send_pm(message.from(), "Gets a list of all joined rooms.");
+		else if (m == "help join")
+			send_pm(message.from(), "join <room> <alias>: Joins the given room.");
+		else if (m == "help leave")
+			send_pm(message.from(), "leave <alias>: Leaves the given room.");
+		return;
+	}
+
+	// Returns the player listing.
 	if (m == "listonline" || m == "listusers")
 	{
 		send_pm(message.from(), _getLoginMessage());
+		return;
+	}
+
+	// Returns a list of all watched rooms.
+	if (m == "listrooms")
+	{
+		send_pm(message.from(), "Watched rooms: " + PrefixManager::Instance().get_all_prefixes().join(", "));
+		return;
+	}
+
+	// Join a room.
+	if (m.startsWith("join ", Qt::CaseInsensitive))
+	{
+		QStringList list = m.split(' ', QString::SkipEmptyParts);
+		if (list.length() != 3)
+			return;
+
+		PrefixManager::Instance().add_prefix(list[2], list[1]);
+		add_channel(list[1]);
+		return;
+	}
+
+	// Leave a room.
+	if (m.startsWith("leave ", Qt::CaseInsensitive))
+	{
+		QStringList list = m.split(' ', QString::SkipEmptyParts);
+		if (list.length() != 2)
+			return;
+
+		QString c = PrefixManager::Instance().remove_prefix(list[1]);
+		remove_channel(c);
+		return;
 	}
 }
 

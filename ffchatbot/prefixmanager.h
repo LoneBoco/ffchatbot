@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QString>
+#include <QStringList>
 #include <map>
 #include <set>
 
@@ -21,6 +22,9 @@ public:
 
 	void load_prefixes(QJsonObject& json);
 	QString get_prefix(QString channel);
+	void add_prefix(QString prefix, QString channel);
+	QString remove_prefix(QString prefix);
+	QStringList get_all_prefixes();
 
 private:
 	PrefixManager();
