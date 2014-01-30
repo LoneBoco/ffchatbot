@@ -169,9 +169,11 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		if (m == "help")
 		{
-			QString msg = "Commands: listonline/listusers, listrooms, join, leave";
+			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, listrooms, join, leave";
 			send_pm(message.from(), msg);
 		}
+		else if (m == "help version")
+			send_pm(message.from(), "Gets the FFChatBot version information.");
 		else if (m == "help listonline" || m == "help listusers")
 			send_pm(message.from(), "Gets a list of all online users.");
 		else if (m == "help listrooms")
@@ -180,6 +182,13 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 			send_pm(message.from(), "join <room> <alias>: Joins the given room.");
 		else if (m == "help leave")
 			send_pm(message.from(), "leave <alias>: Leaves the given room.");
+		return;
+	}
+
+	// Version listing.
+	if (m == "version")
+	{
+		send_pm(message.from(), QString("FFChatBot version: ") + VERSION);
 		return;
 	}
 
@@ -220,6 +229,9 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		remove_channel(c);
 		return;
 	}
+
+	// Invalid command.
+	send_pm(message.from(), "Invalid command.  Use help for a command list.");
 }
 
 void XmppClient::muc_messageReceived(const QXmppMessage& message)
@@ -317,7 +329,7 @@ void XmppClient::muc_error(const QXmppStanza::Error& err)
 {
 	if (err.condition() == QXmppStanza::Error::Conflict)
 	{
-		// We are already signed into this channel.  Disconnect and try again.
+		// We are already signed into this channel.  Disconnect and try again in 10 seconds.
 		this->disconnectFromServer();
 		_reconnect_timer.start(10000);
 	}
