@@ -8,13 +8,24 @@
 #include <QFile>
 #include <string>
 #include "QXmppMucManager.h"
+#include <signal.h>
+
 
 QJsonDocument settings;
+XmppClient client;
+
+
+int main(int argc, char *argv[]);
+void terminate(int sig);
+
 
 int main(int argc, char *argv[])
 {
 	// Create our object.
 	QCoreApplication a(argc, argv);
+	signal(SIGABRT, terminate);
+	signal(SIGTERM, terminate);
+	signal(SIGINT, terminate);
 
 	// Load settings.
 	QFile file("relayconfig.txt");
@@ -30,7 +41,6 @@ int main(int argc, char *argv[])
 	QString character = obj["Character"].toString();
 	QString guid = obj["GUID"].toString();
 
-	XmppClient client;
 	client.load_muc_extension();
 	auto chans = obj["Channels"];
 	if (chans.isNull())
@@ -45,4 +55,9 @@ int main(int argc, char *argv[])
 
 	// Run.
 	a.exec();
+}
+
+void terminate(int sig)
+{
+	client.disconnect();
 }
