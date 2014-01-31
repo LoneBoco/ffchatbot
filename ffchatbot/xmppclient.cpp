@@ -162,6 +162,10 @@ void XmppClient::clientConnected()
 
 void XmppClient::messageReceived(const QXmppMessage& message)
 {
+	// This function is only for normal messages.
+	if (message.type() != QXmppMessage::Normal)
+		return;
+
 	// See who it is from.  If it is from ourself, don't respond to it.
 	QString from = QXmppUtils::jidToResource(message.from());
 	if (from.isEmpty() || from.toUpper() == _character.toUpper())
@@ -245,7 +249,7 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 	if (!room)
 		return;
 
-	// Only do group chats for now.
+	// This function is only for group chats.
 	if (message.type() != QXmppMessage::GroupChat)
 		return;
 
