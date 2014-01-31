@@ -59,6 +59,6 @@ int main(int argc, char *argv[])
 
 void terminate(int sig)
 {
-	client.disconnect();
+	client.disconnectFromServer();
 	exit(0);
 }
