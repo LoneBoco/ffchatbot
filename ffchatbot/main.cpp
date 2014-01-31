@@ -60,4 +60,5 @@ int main(int argc, char *argv[])
 void terminate(int sig)
 {
 	client.disconnect();
+	exit(0);
 }
