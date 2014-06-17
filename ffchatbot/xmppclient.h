@@ -8,7 +8,7 @@
 #include <list>
 #include <QTimer>
 
-#define VERSION "[14.1.30.3]"
+#define VERSION "[14.6.17.0]"
 
 class XmppClient : public QXmppClient
 {
