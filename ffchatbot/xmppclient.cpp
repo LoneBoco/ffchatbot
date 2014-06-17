@@ -174,7 +174,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	QString m = message.body();
 
 	// Check for AFK replies.
-	if (m == "&lt;AFK&gt; I am away from my keyboard")
+	if (m == "<AFK> I am away from my keyboard")
 		return;
 
 	// Check for a help command.
