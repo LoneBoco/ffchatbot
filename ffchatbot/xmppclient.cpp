@@ -12,7 +12,7 @@ XmppClient::XmppClient(QObject *parent)
 	  _server("chat.red5studios.com"),
 	  _jidserver("firefall.chat.red5studios.com"),
 	  _confserver("conference.firefall.chat.red5studios.com")
-{	
+{
 	bool check;
 	Q_UNUSED(check);
 
@@ -36,7 +36,7 @@ void XmppClient::load_muc_extension()
 	this->addExtension(_muc_manager);
 }
 
-void XmppClient::connect(QString character, QString secret)
+void XmppClient::connect(const QString& character, const QString& secret)
 {
 	_character = character;
 	_secret = secret;
@@ -49,19 +49,17 @@ void XmppClient::connect(QString character, QString secret)
 	config.setPassword(secret);
 	config.setAutoReconnectionEnabled(true);
 
-	this->logger()->setLoggingType(QXmppLogger::StdoutLogging);	
+	this->logger()->setLoggingType(QXmppLogger::StdoutLogging);
 	this->connectToServer(config);
 }
 
-void XmppClient::add_channel(QString channel)
+void XmppClient::add_channel(const QString& channel)
 {
 	QXmppMucRoom* room = nullptr;
 
 	// See if this room already exists.
-	auto rooms = _muc_manager->rooms();
-	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	for (auto r: _muc_manager->rooms())
 	{
-		QXmppMucRoom* r = *i;
 		if (QXmppUtils::jidToUser(r->jid()).toUpper() == channel.toUpper())
 		{
 			room = r;
@@ -94,15 +92,13 @@ void XmppClient::add_channel(QString channel)
 	room->join();
 }
 
-void XmppClient::remove_channel(QString channel)
+void XmppClient::remove_channel(const QString& channel)
 {
 	QXmppMucRoom* room = nullptr;
 
 	// Find the room.
-	auto rooms = _muc_manager->rooms();
-	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	for (auto r: _muc_manager->rooms())
 	{
-		QXmppMucRoom* r = *i;
 		if (QXmppUtils::jidToUser(r->jid()).toUpper() == channel.toUpper())
 		{
 			room = r;
@@ -118,7 +114,7 @@ void XmppClient::remove_channel(QString channel)
 	room->leave();
 }
 
-void XmppClient::send_pm(QString jid, QString msg)
+void XmppClient::send_pm(const QString& jid, const QString& msg)
 {
 	// Message element.
 	QXmppElement message;
@@ -153,10 +149,11 @@ void XmppClient::clientConnected()
 		return;
 
 	// Register each channel.
-	auto o = chans.toObject();
-	for (auto i = o.begin(); i != o.end(); ++i)
+	// Channels are stored in key/value pairs, with the channel as the value.
+	// c will be the value.
+	for (auto c: chans.toObject())
 	{
-		add_channel(i.value().toString());
+		add_channel(c.toString());
 	}
 }
 
@@ -174,6 +171,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	QString m = message.body();
 
 	// Check for AFK replies.
+	// This avoids an infinite loop where it keeps responding to the AFK notification.
 	if (m == "<AFK> I am away from my keyboard")
 		return;
 
@@ -267,14 +265,12 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 	QString msg = "[" + prefix + "] " + from + ": " + message.body();
 
 	// Loop through each room relaying the message.
-	auto rooms = _muc_manager->rooms();
-	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	for (auto r: _muc_manager->rooms())
 	{
 		// Ignore the room that the message is from.
-		if ((*i) == room)
+		if (r == room)
 			continue;
 
-		QXmppMucRoom* r = *i;
 		r->sendMessage(msg);
 	}
 }
@@ -294,15 +290,13 @@ void XmppClient::muc_userJoined(const QString& jid)
 	QString prefix = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(room->jid()));
 	QString message = "[" + prefix + "] " + user + " has logged in.";
 
-	// Loop through each room informing of the user's joining.
-	auto rooms = _muc_manager->rooms();
-	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	// Loop through each room informing of the user's status.
+	for (auto r: _muc_manager->rooms())
 	{
 		// Ignore the room that just sent the message.
-		if ((*i) == room)
+		if (r == room)
 			continue;
 
-		QXmppMucRoom* r = *i;
 		r->sendMessage(message);
 	}
 
@@ -325,15 +319,13 @@ void XmppClient::muc_userLeft(const QString& jid)
 	QString prefix = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(room->jid()));
 	QString message = "[" + prefix + "] " + user + " has signed out.";
 
-	// Loop through each room informing of the user's joining.
-	auto rooms = _muc_manager->rooms();
-	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	// Loop through each room informing of the user's status.
+	for (auto r: _muc_manager->rooms())
 	{
 		// Ignore the room that just sent the message.
-		if ((*i) == room)
+		if (r == room)
 			continue;
 
-		QXmppMucRoom* room = *i;
 		room->sendMessage(message);
 	}
 }
@@ -358,11 +350,8 @@ QString XmppClient::_getLoginMessage() const
 {
 	QString message;
 	int total_users = 0;
-	auto rooms = _muc_manager->rooms();
-	for (auto i = rooms.begin(); i != rooms.end(); ++i)
+	for (auto r: _muc_manager->rooms())
 	{
-		QXmppMucRoom* r = *i;
-
 		QString p = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(r->jid()));
 		auto participants = r->participants();
 		if (participants.length() > 1)

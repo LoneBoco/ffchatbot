@@ -20,11 +20,11 @@ public:
 
 	void load_muc_extension();
 
-	void connect(QString character, QString secret);
-	void add_channel(QString channel);
-	void remove_channel(QString channel);
+	void connect(const QString& character, const QString& secret);
+	void add_channel(const QString& channel);
+	void remove_channel(const QString& channel);
 
-	void send_pm(QString jid, QString msg);
+	void send_pm(const QString& jid, const QString& msg);
 
 protected:
 	QString _getLoginMessage() const;
