@@ -27,24 +27,31 @@ int main(int argc, char *argv[])
 	signal(SIGTERM, terminate);
 	signal(SIGINT, terminate);
 
-	// Load settings.
+	// Open the settings file.
 	QFile file("relayconfig.txt");
-	if (!file.open(QIODevice::ReadOnly))
-		return 1;
-	QByteArray filedata = file.readAll();
-	file.close();
-	settings = QJsonDocument::fromJson(filedata);
-	if (settings.isNull())
-		return 1;
+	if (file.open(QIODevice::ReadOnly))
+	{
+		// Load the data from the settings file.
+		QByteArray filedata = file.readAll();
+		file.close();
 
+		// Convert to a QJsonDocument object.
+		settings = QJsonDocument::fromJson(filedata);
+		if (settings.isNull())
+			return 2;
+	}
+	else return 1;
+
+	// Read some of our settings.
 	QJsonObject obj = settings.object();
 	QString character = obj["Character"].toString();
 	QString guid = obj["GUID"].toString();
 
+	// Load the MUC (multi-user channel) extension and get our channel list.
 	client.load_muc_extension();
 	auto chans = obj["Channels"];
 	if (chans.isNull())
-		return 1;
+		return 3;
 
 	// Load the channels into the channel manager.
 	auto o = chans.toObject();
@@ -55,9 +62,11 @@ int main(int argc, char *argv[])
 
 	// Run.
 	a.exec();
+
+	return 0;
 }
 
-void terminate(int sig)
+void terminate(int)
 {
 	client.disconnectFromServer();
 	exit(0);
