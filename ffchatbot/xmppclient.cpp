@@ -3,6 +3,8 @@
 #include "QXmppMucManager.h"
 #include "QXmppUtils.h"
 #include <QJsonDocument>
+#include <QDateTime>
+#include <random>
 
 // From main.cpp
 extern QJsonDocument settings;
@@ -137,6 +139,46 @@ void XmppClient::send_pm(const QString& jid, const QString& msg)
 	sendElement(message);
 }
 
+void XmppClient::send_to_all(const QString& msg)
+{
+	// Loop through each room relaying the message.
+	for (auto r: _muc_manager->rooms())
+		r->sendMessage(msg);
+}
+
+QString XmppClient::roll_dice(const QString& dice)
+{
+	QStringList list = dice.split('d', QString::SkipEmptyParts);
+	if (list.length() == 2)
+	{
+		bool n_ok, s_ok;
+		int n = list[0].toInt(&n_ok);
+		int s = list[1].toInt(&s_ok);
+
+		if (n_ok && s_ok)
+		{
+			std::mt19937 gen;
+			gen.seed(QDateTime::currentMSecsSinceEpoch());
+			std::uniform_int_distribution<char> r(1, s);
+
+			QString rolls;
+
+			int result = 0;
+			for (int i = 0; i < n; ++i)
+			{
+				int d = r(gen);
+				result += d;
+				if (i != 0) rolls.append(", ");
+				rolls.append(QString::number(d));
+			}
+
+			return QString("dice: ") + QString::number(result) + " (" + rolls + ")";
+		}
+	}
+
+	return QString("dice: Invalid dice parameters.");
+}
+
 //
 // SLOTS
 //
@@ -180,7 +222,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		if (m == "help")
 		{
-			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, listrooms, join, leave";
+			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, listrooms, join, leave, roll";
 			send_pm(message.from(), msg);
 		}
 		else if (m == "help version")
@@ -193,6 +235,8 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 			send_pm(message.from(), "join <room> <alias>: Joins the given room.");
 		else if (m == "help leave")
 			send_pm(message.from(), "leave <alias>: Leaves the given room.");
+		else if (m == "help roll")
+			send_pm(message.from(), "roll xdy: Rolls x number of y-sided dice. (ex, 1d6).  Can be used publically.");
 		return;
 	}
 
@@ -241,6 +285,12 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		return;
 	}
 
+	if (m.startsWith("roll ", Qt::CaseInsensitive))
+	{
+		send_pm(message.from(), roll_dice(m.mid(5).trimmed()));
+		return;
+	}
+
 	// Invalid command.
 	send_pm(message.from(), "Invalid command.  Use help for a command list.");
 }
@@ -272,6 +322,12 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 			continue;
 
 		r->sendMessage(msg);
+	}
+
+	// See if it is a public command.
+	if (message.body().startsWith("!roll "))
+	{
+		send_to_all(roll_dice(message.body().mid(6).trimmed()));
 	}
 }
 

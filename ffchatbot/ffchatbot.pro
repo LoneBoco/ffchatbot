@@ -26,7 +26,7 @@ HEADERS  += xmppclient.h \
 #FORMS    += mainwindow.ui \
 #    connectwindow.ui
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../bin/ -lqxmpp
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../bin/ -lqxmpp0
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../bin/ -lqxmpp_d0
 else:unix:CONFIG(release, debug|release): LIBS += -L$$PWD/../bin/ -lqxmpp
 else:unix:CONFIG(debug, debug|release): LIBS += -L$$PWD/../bin/ -lqxmpp_d
