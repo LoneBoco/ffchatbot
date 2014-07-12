@@ -382,7 +382,7 @@ void XmppClient::muc_userLeft(const QString& jid)
 		if (r == room)
 			continue;
 
-		room->sendMessage(message);
+		r->sendMessage(message);
 	}
 }
 
