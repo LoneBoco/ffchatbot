@@ -11,9 +11,9 @@ extern QJsonDocument settings;
 
 XmppClient::XmppClient(QObject *parent)
 	: QXmppClient(parent),
-	  _server("chat.red5studios.com"),
-	  _jidserver("firefall.chat.red5studios.com"),
-	  _confserver("conference.firefall.chat.red5studios.com")
+	  _server("chat.firefallthegame.com"),
+	  _jidserver("firefall.chat.firefallthegame.com"),
+	  _confserver("conference.firefall.chat.firefallthegame.com")
 {
 	bool check;
 	Q_UNUSED(check);
