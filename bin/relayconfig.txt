@@ -2,9 +2,6 @@
 	"Character": "AllianceBot",
 	"GUID": "a1f45cd4d92f2a1220e5b28270d7cd28074b3823",
 	"Channels": {
-		"GOONS": "army-1f525462bc0153fc",
-		"LLJK": "army-1f525462c8005bfc",
-		"FAT": "army-1f525462c802a6fc",
-		"GNDN": "army-1f525462c80377fc"
+		"GOONS": "army-1f525462bc0153fc"
 	}
 }
