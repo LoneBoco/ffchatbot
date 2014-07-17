@@ -59,10 +59,12 @@ void MainWindow::showConnectWindow()
 	this->userID = a_hash.toBase64();
 	this->userSecret = b_hash.toHex().toLower();
 
-	QUrl launcher_rqst("http://beta.firefallthegame.com/launcher/data");
-	QUrl character_rqst("https://beta.firefallthegame.com/game/character/list.json");
+	// QUrl launcher_rqst("http://beta.firefallthegame.com/launcher/data");
+	// QUrl character_rqst("https://beta.firefallthegame.com/game/character/list.json");
+	QUrl character_rqst("https://clientapi-v01-uw2.firefallthegame.com/api/v2/characters/list");
 
 	// Get the session cookie.
+	/*
 	QNetworkRequest cookie(launcher_rqst);
 	auto reply_a = network->get(cookie);
 
@@ -72,10 +74,12 @@ void MainWindow::showConnectWindow()
 	loop.exec();
 
 	auto error_a = reply_a->errorString();
+	*/
 
 	// Get the character.
 	QNetworkRequest character(character_rqst);
-	character.setRawHeader("X-Red5-Signature", make_char_token("beta.firefallthegame.com", "/game/character/list.json"));
+	character.setRawHeader("X-Red5-Signature", make_char_token("clientapi-v01-uw2.firefallthegame.com", "/api/v2/characters/list"));
+	// character.setRawHeader("X-Red5-Signature", make_char_token("beta.firefallthegame.com", "/game/character/list.json"));
 	auto reply = network->get(character);
 
 	// Loop until we finish getting our data.
@@ -86,6 +90,7 @@ void MainWindow::showConnectWindow()
 	auto error = reply->errorString();
 
 	// Parse the information out of the reply.
+	// {"characters":[{"id":123456,"character_guid":1231231231231231231,"account_id":12345,"name":"Nalin","unique_name":"NALIN","race":"human","gender":"male","loadout_id":null,"head_mainId":10004,"head_accAId":10089,"head_accBId":0,"voice_setId":1000,"is_active":true,"is_dev":false,"xdata":null,"deleted_at":null,"created_at":"2012-08-08T07:48:20+00:00","updated_at":"2014-02-01T04:22:31+00:00","time_played_secs":1374077,"title_id":160,"current_gender":"male"}],"is_dev":false}
 	QByteArray replyData = reply->readAll();
 	auto jdoc = QJsonDocument::fromJson(replyData);
 	auto obj = jdoc.object();
@@ -111,10 +116,14 @@ QByteArray MainWindow::make_char_token(const QByteArray& host, const QByteArray&
 	for (int i = 0; i < 8; ++i)
 		nonce.append(QString().sprintf("%02x", r(gen)));
 	int time = QDateTime::currentDateTimeUtc().toTime_t();
-	QByteArray req = "ver=1&tc=" + QString::number(time).toUtf8() + "&nonce=" + nonce
+	QByteArray req = "ver=2"
+			+ "&tc=" + QString::number(time).toUtf8()
+			+ "&nonce=" + nonce
 			+ "&uid=" + QUrl::toPercentEncoding(this->userID)
-			+ "&host=" + host + "&path=" + QUrl::toPercentEncoding(uri)
-			+ "&hbody=" + A.toHex().toLower() + "&cid=" + this->userGUID;
+			+ "&host=" + host
+			+ "&path=" + QUrl::toPercentEncoding(uri)
+			+ "&hbody=" + A.toHex().toLower()
+			+ "&cid=" + this->userGUID;
 
 	// Step 4: Generate hash of B + step 3.
 	QByteArray C = QCryptographicHash::hash(B + req, QCryptographicHash::Sha1);
