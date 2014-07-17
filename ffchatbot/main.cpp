@@ -41,7 +41,10 @@ int main(int argc, char *argv[])
 	signal(SIGABRT, terminate);
 	signal(SIGTERM, terminate);
 	signal(SIGINT, terminate);
+
+#if Q_OS_WIN32
 	signal(SIGBREAK, terminate);
+#endif
 
 	// Open the settings file.
 	QFile file("relayconfig.txt");
