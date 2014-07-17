@@ -4,12 +4,6 @@ TEMPLATE = subdirs
 
 SUBDIRS = src
 
-android {
-} else {
-    SUBDIRS += tests examples doc
-    INSTALLS += htmldocs
-}
-
 CONFIG += ordered
 
 # Documentation generation
