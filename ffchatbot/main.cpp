@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	signal(SIGTERM, terminate);
 	signal(SIGINT, terminate);
 
-#if Q_OS_WIN32
+#ifdef Q_OS_WIN32
 	signal(SIGBREAK, terminate);
 #endif
 
