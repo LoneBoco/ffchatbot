@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2008-2012 The QXmpp developers
+ * Copyright (C) 2008-2014 The QXmpp developers
  *
  * Author:
  *  Jeremy Lainé
  *
  * Source:
- *  http://code.google.com/p/qxmpp
+ *  https://github.com/qxmpp-project/qxmpp
  *
  * This file is a part of QXmpp library.
  *
@@ -141,7 +141,11 @@ signals:
     void newConnection(QSslSocket *socket);
 
 private:
+    #if QT_VERSION < 0x050000
     void incomingConnection(int socketDescriptor);
+    #else
+    void incomingConnection(qintptr socketDescriptor);
+    #endif
     QXmppSslServerPrivate * const d;
 };
 

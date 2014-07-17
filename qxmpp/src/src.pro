@@ -55,6 +55,3 @@ equals(QXMPP_LIBRARY_TYPE,staticlib) {
     QMAKE_PKGCONFIG_CFLAGS = -DQXMPP_SHARED
 }
 unix:QMAKE_CLEAN += -r pkgconfig lib$${TARGET}.prl
-
-
-DESTDIR = $$PWD/../../bin

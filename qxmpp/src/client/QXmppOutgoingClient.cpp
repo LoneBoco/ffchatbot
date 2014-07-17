@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2008-2012 The QXmpp developers
+ * Copyright (C) 2008-2014 The QXmpp developers
  *
  * Authors:
  *  Manjeet Dahiya
  *  Jeremy Lainé
  *
  * Source:
- *  http://code.google.com/p/qxmpp
+ *  https://github.com/qxmpp-project/qxmpp
  *
  * This file is a part of QXmpp library.
  *
@@ -103,8 +103,11 @@ private:
 QXmppOutgoingClientPrivate::QXmppOutgoingClientPrivate(QXmppOutgoingClient *qq)
     : redirectPort(0)
     , sessionAvailable(false)
+    , sessionStarted(false)
     , isAuthenticated(false)
     , saslClient(0)
+    , pingTimer(0)
+    , timeoutTimer(0)
     , q(qq)
 {
 }
@@ -126,7 +129,16 @@ void QXmppOutgoingClientPrivate::connectToHost(const QString &host, quint16 port
 #endif
 
     // connect to host
-    q->socket()->connectToHost(host, port);
+    const QXmppConfiguration::StreamSecurityMode localSecurity = q->configuration().streamSecurityMode();
+    if (localSecurity == QXmppConfiguration::LegacySSL) {
+        if (!q->socket()->supportsSsl()) {
+            q->warning("Not connecting as legacy SSL was requested, but SSL support is not available");
+            return;
+        }
+        q->socket()->connectToHostEncrypted(host, port);
+    } else {
+        q->socket()->connectToHost(host, port);
+    }
 }
 
 /// Constructs an outgoing client stream.
