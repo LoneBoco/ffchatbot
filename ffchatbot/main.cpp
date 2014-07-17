@@ -6,6 +6,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFile>
+#include <QCryptographicHash>
+#include <QString>
 #include <string>
 #include "QXmppMucManager.h"
 #include <signal.h>
@@ -13,6 +15,19 @@
 
 QJsonDocument settings;
 XmppClient client;
+
+enum class ERETURN
+{
+	OK = 0,
+	NOCONFIG = 1,
+	INVALIDCONFIG = 2,
+	NOEMAILORPASSWORD = 3,
+	NOCHANNELS = 4,
+
+	COUNT
+};
+
+QCoreApplication* app;
 
 
 int main(int argc, char *argv[]);
@@ -22,7 +37,7 @@ void terminate(int sig);
 int main(int argc, char *argv[])
 {
 	// Create our object.
-	QCoreApplication a(argc, argv);
+    app = new QCoreApplication(argc, argv);
 	signal(SIGABRT, terminate);
 	signal(SIGTERM, terminate);
 	signal(SIGINT, terminate);
@@ -38,20 +53,43 @@ int main(int argc, char *argv[])
 		// Convert to a QJsonDocument object.
 		settings = QJsonDocument::fromJson(filedata);
 		if (settings.isNull())
-			return 2;
+            return (int)ERETURN::INVALIDCONFIG;
 	}
-	else return 1;
+    else return (int)ERETURN::NOCONFIG;
 
 	// Read some of our settings.
 	QJsonObject obj = settings.object();
 	QString character = obj["Character"].toString();
-	QString guid = obj["GUID"].toString();
+	QString guid;
+
+	// Attempt to get the guid, or build it.
+	auto guid_entry = obj.find("GUID");
+	if (guid_entry != obj.end())
+        guid = (*guid_entry).toString();
+	else
+	{
+		auto email_entry = obj.find("E-Mail");
+		auto password_entry = obj.find("Password");
+
+		if (email_entry == obj.end() || password_entry == obj.end())
+            return (int)ERETURN::NOEMAILORPASSWORD;
+
+		// <email>-<pw>-red5salt-7nc9bsj4j734ughb8r8dhb8938h8by987c4f7h47b
+        QByteArray email = (*email_entry).toString().toUtf8();
+        QByteArray password = (*password_entry).toString().toUtf8();
+        QByteArray secret = email + "-" + password + "-red5salt-7nc9bsj4j734ughb8r8dhb8938h8by987c4f7h47b";
+        QByteArray hash = QCryptographicHash::hash(secret,
+			QCryptographicHash::Sha1);
+
+        hash = hash.toHex().toLower();
+		guid = hash;
+	}
 
 	// Load the MUC (multi-user channel) extension and get our channel list.
 	client.load_muc_extension();
 	auto chans = obj["Channels"];
 	if (chans.isNull())
-		return 3;
+        return (int)ERETURN::NOCHANNELS;
 
 	// Load the channels into the channel manager.
 	auto o = chans.toObject();
@@ -61,13 +99,17 @@ int main(int argc, char *argv[])
 	client.connect(character, guid);
 
 	// Run.
-	a.exec();
+    app->exec();
+    delete app;
 
-	return 0;
+    return (int)ERETURN::OK;
 }
 
 void terminate(int)
 {
 	client.disconnectFromServer();
+    app->quit();
+    delete app;
+
 	exit(0);
 }
