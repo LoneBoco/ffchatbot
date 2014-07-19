@@ -146,7 +146,7 @@ void XmppClient::send_to_all(const QString& msg)
 		r->sendMessage(msg);
 }
 
-QString XmppClient::roll_dice(const QString& dice)
+QString XmppClient::roll_dice(const QString& dice, const QString& from)
 {
 	QStringList list = dice.split('d', QString::SkipEmptyParts);
 	if (list.length() == 2)
@@ -154,6 +154,11 @@ QString XmppClient::roll_dice(const QString& dice)
 		bool n_ok, s_ok;
 		int n = list[0].toInt(&n_ok);
 		int s = list[1].toInt(&s_ok);
+
+		if (n < 0 || n > 100)
+			n_ok = false;
+		if (s < 0 || s > 255)
+			s_ok = false;
 
 		if (n_ok && s_ok)
 		{
@@ -172,7 +177,7 @@ QString XmppClient::roll_dice(const QString& dice)
 				rolls.append(QString::number(d));
 			}
 
-			return QString("dice: ") + QString::number(result) + " (" + rolls + ")";
+			return from + " rolled: " + QString::number(result) + " (" + rolls + ")";
 		}
 	}
 
@@ -287,7 +292,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 
 	if (m.startsWith("roll ", Qt::CaseInsensitive))
 	{
-		send_pm(message.from(), roll_dice(m.mid(5).trimmed()));
+		send_pm(message.from(), roll_dice(m.mid(5).trimmed(), from));
 		return;
 	}
 
@@ -324,10 +329,17 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 		r->sendMessage(msg);
 	}
 
+	QString m = message.body();
+
 	// See if it is a public command.
-	if (message.body().startsWith("!roll "))
+	if (m.startsWith("!roll "))
 	{
-		send_to_all(roll_dice(message.body().mid(6).trimmed()));
+		send_to_all(roll_dice(m.mid(6).trimmed(), from));
+	}
+
+	if (m.startsWith("!listusers ") || m.startsWith("!listonline "))
+	{
+		send_to_all(_getLoginMessage());
 	}
 }
 
