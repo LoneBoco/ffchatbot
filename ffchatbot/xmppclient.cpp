@@ -337,7 +337,7 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 		send_to_all(roll_dice(m.mid(6).trimmed(), from));
 	}
 
-	if (m.startsWith("!listusers ") || m.startsWith("!listonline "))
+	if (m == "!listusers" || m == "!listonline")
 	{
 		send_to_all(_getLoginMessage());
 	}
