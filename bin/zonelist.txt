@@ -1,0 +1,18 @@
+{
+	"162": {
+		"name": "Devil's Tusk",
+		"abbr": [ "dt", "tusk" ]
+	},
+	"448": {
+		"name": "New Eden",
+		"abbr": [ "ne", "coral", "coral forest" ]
+	},
+	"1021": {
+		"name": "Broken Peninsula",
+		"abbr": [ "bp", "broken" ]
+	},
+	"1030": {
+		"name": "Sertao",
+		"abbr": []
+	}
+}

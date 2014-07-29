@@ -1,20 +1,20 @@
 #include "mainwindow.h"
 #include "xmppclient.h"
+#include "charactermanager.h"
+#include "connectionmanager.h"
+#include "zonemanager.h"
 #include "prefixmanager.h"
+
 #include <QApplication>
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFile>
-#include <QCryptographicHash>
 #include <QString>
+
 #include <string>
-#include "QXmppMucManager.h"
 #include <signal.h>
 
-
-QJsonDocument settings;
-XmppClient client;
 
 enum class ERETURN
 {
@@ -47,73 +47,35 @@ int main(int argc, char *argv[])
 #endif
 
 	// Open the settings file.
-	QFile file("relayconfig.txt");
-	if (file.open(QIODevice::ReadOnly))
-	{
-		// Load the data from the settings file.
-		QByteArray filedata = file.readAll();
-		file.close();
+	int count = ConnectionManager::Instance().LoadCharacters("relayconfig.txt");
+	if (count == 0)
+		return (int)ERETURN::INVALIDCONFIG;
 
-		// Convert to a QJsonDocument object.
-		settings = QJsonDocument::fromJson(filedata);
-		if (settings.isNull())
-            return (int)ERETURN::INVALIDCONFIG;
-	}
-    else return (int)ERETURN::NOCONFIG;
+	// Load our zones.
+	ZoneManager::Instance().LoadZones("zonelist.txt");
 
-	// Read some of our settings.
-	QJsonObject obj = settings.object();
-	QString character = obj["Character"].toString();
-	QString guid;
-
-	// Attempt to get the guid, or build it.
-	auto guid_entry = obj.find("GUID");
-	if (guid_entry != obj.end())
-        guid = (*guid_entry).toString();
-	else
-	{
-		auto email_entry = obj.find("E-Mail");
-		auto password_entry = obj.find("Password");
-
-		if (email_entry == obj.end() || password_entry == obj.end())
-            return (int)ERETURN::NOEMAILORPASSWORD;
-
-		// <email>-<pw>-red5salt-7nc9bsj4j734ughb8r8dhb8938h8by987c4f7h47b
-        QByteArray email = (*email_entry).toString().toUtf8();
-        QByteArray password = (*password_entry).toString().toUtf8();
-        QByteArray secret = email + "-" + password + "-red5salt-7nc9bsj4j734ughb8r8dhb8938h8by987c4f7h47b";
-        QByteArray hash = QCryptographicHash::hash(secret,
-			QCryptographicHash::Sha1);
-
-        hash = hash.toHex().toLower();
-		guid = hash;
-	}
-
-	// Load the MUC (multi-user channel) extension and get our channel list.
-	client.load_muc_extension();
-	auto chans = obj["Channels"];
-	if (chans.isNull())
-        return (int)ERETURN::NOCHANNELS;
-
-	// Load the channels into the channel manager.
-	auto o = chans.toObject();
-	PrefixManager::Instance().load_prefixes(o);
-
-	// Set up the XMPP network.
-	client.connect(character, guid);
+	// Load our saved user data.
+	CharacterManager::Instance().LoadCharacters("userdata.txt");
 
 	// Run.
     app->exec();
-    delete app;
+	delete app;
+
+	// Cleanup.
+	ConnectionManager::Instance().Cleanup();
+	CharacterManager::Instance().SaveCharacters("userdata.txt");
 
     return (int)ERETURN::OK;
 }
 
 void terminate(int)
 {
-	client.disconnectFromServer();
-    app->quit();
+	app->quit();
     delete app;
+
+	// Cleanup.
+	ConnectionManager::Instance().Cleanup();
+	CharacterManager::Instance().SaveCharacters("userdata.txt");
 
 	exit(0);
 }

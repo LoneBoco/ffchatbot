@@ -1,7 +1,6 @@
 {
-	"Character": "AllianceBot",
-	"GUID": "a1f45cd4d92f2a1220e5b28270d7cd28074b3823",
-	"Channels": {
-		"GOONS": "army-1f525462bc0153fc"
+	"AllianceBot": {
+		"GUID": "a1f45cd4d92f2a1220e5b28270d7cd28074b3823",
+		"Channel": { "GOONS": "army-1f525462bc0153fc" }
 	}
 }
