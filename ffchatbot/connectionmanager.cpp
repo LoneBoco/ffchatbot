@@ -115,7 +115,7 @@ void ConnectionManager::SendMessage(const QString& from, const QString& msg)
 	QString _from = from.toLower();
 	for (auto i = _connections.begin(); i != _connections.end(); ++i)
 	{
-		if (_from == i->first)
+		if (_from.toLower() == i->first.toLower())
 			continue;
 
 		std::shared_ptr<XmppClient> client = i->second.Client;
