@@ -1,13 +1,15 @@
 #include "xmppclient.h"
+#include "charactermanager.h"
+#include "connectionmanager.h"
 #include "prefixmanager.h"
+
 #include "QXmppMucManager.h"
 #include "QXmppUtils.h"
+
 #include <QJsonDocument>
 #include <QDateTime>
 #include <random>
 
-// From main.cpp
-extern QJsonDocument settings;
 
 XmppClient::XmppClient(QObject *parent)
 	: QXmppClient(parent),
@@ -22,6 +24,9 @@ XmppClient::XmppClient(QObject *parent)
 	Q_ASSERT(check);
 
 	check = QObject::connect(this, SIGNAL(messageReceived(QXmppMessage)), SLOT(messageReceived(QXmppMessage)));
+	Q_ASSERT(check);
+
+	check = QObject::connect(this, SIGNAL(presenceReceived(QXmppPresence)), SLOT(presenceReceived(QXmppPresence)));
 	Q_ASSERT(check);
 
 	check = QObject::connect(&_reconnect_timer, SIGNAL(timeout()), SLOT(muc_error_timeout()));
@@ -144,6 +149,8 @@ void XmppClient::send_to_all(const QString& msg)
 	// Loop through each room relaying the message.
 	for (auto r: _muc_manager->rooms())
 		r->sendMessage(msg);
+
+	ConnectionManager::Instance().SendMessage(_character, msg);
 }
 
 QString XmppClient::roll_dice(const QString& dice, const QString& from)
@@ -190,18 +197,13 @@ QString XmppClient::roll_dice(const QString& dice, const QString& from)
 
 void XmppClient::clientConnected()
 {
-	QJsonObject obj = settings.object();
-	auto chans = obj["Channels"];
-	if (chans.isNull())
-		return;
+	QString c = ConnectionManager::Instance().GetCharacterChannel(_character);
+	add_channel(c);
+}
 
-	// Register each channel.
-	// Channels are stored in key/value pairs, with the channel as the value.
-	// c will be the value.
-	for (auto c: chans.toObject())
-	{
-		add_channel(c.toString());
-	}
+void XmppClient::presenceReceived(const QXmppPresence& presence)
+{
+	QString from = QXmppUtils::jidToResource(presence.from());
 }
 
 void XmppClient::messageReceived(const QXmppMessage& message)
@@ -227,7 +229,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		if (m == "help")
 		{
-			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, listrooms, join, leave, roll";
+			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, listrooms, listinactive, join, leave, roll";
 			send_pm(message.from(), msg);
 		}
 		else if (m == "help version")
@@ -242,6 +244,8 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 			send_pm(message.from(), "leave <alias>: Leaves the given room.");
 		else if (m == "help roll")
 			send_pm(message.from(), "roll xdy: Rolls x number of y-sided dice. (ex, 1d6).  Can be used publically.");
+		else if (m == "help listinactive")
+			send_pm(message.from(), "listinactive <days>: Lists players who haven't logged in for the given number of days.");
 		return;
 	}
 
@@ -290,9 +294,30 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		return;
 	}
 
+	// Roll dice.
 	if (m.startsWith("roll ", Qt::CaseInsensitive))
 	{
 		send_pm(message.from(), roll_dice(m.mid(5).trimmed(), from));
+		return;
+	}
+
+	// List inactive players.
+	if (m.startsWith("listinactive ", Qt::CaseInsensitive))
+	{
+		int days = m.mid(13).trimmed().toInt();
+		if (days < 1) days = 1;
+
+		QString list("Users inactive for ");
+		list.append(QString::number(days));
+		if (days == 1) list.append(" day: ");
+		else list.append(" days: ");
+
+		QStringList inactives = CharacterManager::Instance().GetInactives(days);
+		for (QString c: inactives)
+			list.append(c + ", ");
+		list = list.remove(list.length() - 2, 2);
+
+		send_pm(message.from(), list);
 		return;
 	}
 
@@ -328,6 +353,7 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 
 		r->sendMessage(msg);
 	}
+	ConnectionManager::Instance().SendMessage(_character, msg);
 
 	QString m = message.body();
 
@@ -355,6 +381,9 @@ void XmppClient::muc_userJoined(const QString& jid)
 	if (user.toUpper() == _character.toUpper())
 		return;
 
+	// Record the last seen time of this user.
+	CharacterManager::Instance().SetLastSeen(user, QDateTime::currentDateTime().toTime_t());
+
 	QString prefix = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(room->jid()));
 	QString message = "[" + prefix + "] " + user + " has logged in.";
 
@@ -367,6 +396,7 @@ void XmppClient::muc_userJoined(const QString& jid)
 
 		r->sendMessage(message);
 	}
+	ConnectionManager::Instance().SendMessage(_character, message);
 
 	// Send the user a list of everybody online.
 	send_pm(jid, _getLoginMessage());
@@ -384,6 +414,9 @@ void XmppClient::muc_userLeft(const QString& jid)
 	if (user.toUpper() == _character.toUpper())
 		return;
 
+	// Record the last seen time of this user.
+	CharacterManager::Instance().SetLastSeen(user, QDateTime::currentDateTime().toTime_t());
+
 	QString prefix = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(room->jid()));
 	QString message = "[" + prefix + "] " + user + " has signed out.";
 
@@ -396,6 +429,7 @@ void XmppClient::muc_userLeft(const QString& jid)
 
 		r->sendMessage(message);
 	}
+	ConnectionManager::Instance().SendMessage(_character, message);
 }
 
 void XmppClient::muc_error(const QXmppStanza::Error& err)

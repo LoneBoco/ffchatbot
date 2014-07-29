@@ -20,7 +20,6 @@ public:
 		return *PrefixManager::_instance;
 	}
 
-	void load_prefixes(QJsonObject& json);
 	QString get_prefix(QString channel);
 	void add_prefix(QString prefix, QString channel);
 	QString remove_prefix(QString prefix);

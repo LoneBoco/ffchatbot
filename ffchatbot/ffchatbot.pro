@@ -16,12 +16,18 @@ SOURCES += main.cpp\
 #        mainwindow.cpp \
 #    connectwindow.cpp \
     xmppclient.cpp \
-    prefixmanager.cpp
+    prefixmanager.cpp \
+    charactermanager.cpp \
+    connectionmanager.cpp \
+    zonemanager.cpp
 
 HEADERS  += xmppclient.h \
 	#mainwindow.h \
 	#connectwindow.h \
-	prefixmanager.h
+	prefixmanager.h \
+    charactermanager.h \
+    connectionmanager.h \
+    zonemanager.h
 
 #FORMS    += mainwindow.ui \
 #    connectwindow.ui
