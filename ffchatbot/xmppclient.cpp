@@ -149,6 +149,13 @@ void XmppClient::send_to_all(const QString& msg)
 	// Loop through each room relaying the message.
 	for (auto r: _muc_manager->rooms())
 		r->sendMessage(msg);
+}
+
+void XmppClient::send_to_relay(const QString& msg)
+{
+	// Loop through each room relaying the message.
+	for (auto r: _muc_manager->rooms())
+		r->sendMessage(msg);
 
 	ConnectionManager::Instance().SendMessage(_character, msg);
 }
@@ -360,12 +367,12 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 	// See if it is a public command.
 	if (m.startsWith("!roll "))
 	{
-		send_to_all(roll_dice(m.mid(6).trimmed(), from));
+		send_to_relay(roll_dice(m.mid(6).trimmed(), from));
 	}
 
 	if (m == "!listusers" || m == "!listonline")
 	{
-		send_to_all(_getLoginMessage());
+		send_pm(from, _getLoginMessage());
 	}
 }
 

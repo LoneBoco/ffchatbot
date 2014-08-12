@@ -8,7 +8,7 @@
 #include <list>
 #include <QTimer>
 
-#define VERSION "[14.7.28.0]"
+#define VERSION "[14.8.12.0]"
 
 class XmppClient : public QXmppClient
 {
@@ -26,6 +26,7 @@ public:
 
 	void send_pm(const QString& jid, const QString& msg);
 	void send_to_all(const QString& msg);
+	void send_to_relay(const QString& msg);
 
 	QString roll_dice(const QString& dice, const QString& from);
 
