@@ -372,7 +372,7 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 
 	if (m == "!listusers" || m == "!listonline")
 	{
-		send_pm(from, _getLoginMessage());
+		send_pm(message.from(), _getLoginMessage());
 	}
 }
 
