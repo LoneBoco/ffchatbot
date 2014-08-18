@@ -166,19 +166,11 @@ void XmppClient::send_to_all(const QString& msg)
 		for (QString s: sl)
 			r->sendMessage(s);
 	}
-{
-	// Loop through each room relaying the message.
-	for (auto r: _muc_manager->rooms())
-		r->sendMessage(msg);
-
-	ConnectionManager::Instance().SendMessage(_character, msg);
 }
 
 void XmppClient::send_to_relay(const QString& msg)
 {
-	// Loop through each room relaying the message.
-	for (auto r: _muc_manager->rooms())
-		r->sendMessage(msg);
+	send_to_all(msg);
 
 	ConnectionManager::Instance().SendMessage(_character, msg);
 }
