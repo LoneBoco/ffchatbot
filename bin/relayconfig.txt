@@ -1,0 +1,10 @@
+{
+	"AllianceBot": {
+		"GUID": "a1f45cd4d92f2a1220e5b28270d7cd28074b3823",
+		"Channel": { "GOONS": "army-1f525462bc0153fc" }
+	},
+	"AllianceBot2": {
+		"GUID": "f04b30e64f7bbaa0a2ebfb1238a5b7b649c40b75",
+		"Channel": { "GOON2": "army-2053d6b4a80fc2fc" }
+	}
+}
