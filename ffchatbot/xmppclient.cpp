@@ -123,34 +123,70 @@ void XmppClient::remove_channel(const QString& channel)
 
 void XmppClient::send_pm(const QString& jid, const QString& msg)
 {
-	// Message element.
-	QXmppElement message;
-	message.setTagName("message");
-	message.setAttribute("xml:lang", "*");
-	message.setAttribute("to", jid);
-	message.setAttribute("from", this->configuration().jid());
-	message.setAttribute("type", "normal");
-	message.setAttribute("displayname", QXmppUtils::jidToResource(jid));
+	QString msg2 = msg;
+	while (msg2.count() != 0)
+	{
 
-	// Body element.
-	QXmppElement body;
-	body.setTagName("body");
-	body.setValue(msg);
+		// Message element.
+		QXmppElement message;
+		message.setTagName("message");
+		message.setAttribute("xml:lang", "*");
+		message.setAttribute("to", jid);
+		message.setAttribute("from", this->configuration().jid());
+		message.setAttribute("type", "normal");
+		message.setAttribute("displayname", QXmppUtils::jidToResource(jid));
 
-	// Link them together.
-	message.appendChild(body);
+		// Body element.
+		QXmppElement body;
+		body.setTagName("body");
+		body.setValue(msg2.left(256));
+		msg2 = msg2.remove(0, 256);
 
-	// Send the element.
-	sendElement(message);
+		// Link them together.
+		message.appendChild(body);
+
+		// Send the element.
+		sendElement(message);
+	}
 }
 
 void XmppClient::send_to_all(const QString& msg)
 {
+	QStringList sl;
+	QString msg2 = msg;
+	while (msg2.count() != 0)
+	{
+		sl.append(msg2.left(256));
+		msg2 = msg2.remove(0, 256);
+	}
+
 	// Loop through each room relaying the message.
 	for (auto r: _muc_manager->rooms())
-		r->sendMessage(msg);
+	{
+		for (QString s: sl)
+			r->sendMessage(s);
+	}
 
 	ConnectionManager::Instance().SendMessage(_character, msg);
+}
+
+void XmppClient::send_to_room(const QString& msg, QXmppMucRoom* room)
+{
+	if (room == nullptr)
+		return;
+
+	// Break into 256 character chunks.
+	QStringList sl;
+	QString msg2 = msg;
+	while (msg2.count() != 0)
+	{
+		sl.append(msg2.left(256));
+		msg2 = msg2.remove(0, 256);
+	}
+
+	// Relay each message.
+	for (QString s: sl)
+		room->sendMessage(s);
 }
 
 QString XmppClient::roll_dice(const QString& dice, const QString& from)
@@ -351,7 +387,7 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 		if (r == room)
 			continue;
 
-		r->sendMessage(msg);
+		send_to_room(msg, r);
 	}
 	ConnectionManager::Instance().SendMessage(_character, msg);
 
@@ -394,7 +430,7 @@ void XmppClient::muc_userJoined(const QString& jid)
 		if (r == room)
 			continue;
 
-		r->sendMessage(message);
+		send_to_room(message, r);
 	}
 	ConnectionManager::Instance().SendMessage(_character, message);
 
@@ -427,7 +463,7 @@ void XmppClient::muc_userLeft(const QString& jid)
 		if (r == room)
 			continue;
 
-		r->sendMessage(message);
+		send_to_room(message, r);
 	}
 	ConnectionManager::Instance().SendMessage(_character, message);
 }
