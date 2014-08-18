@@ -53,6 +53,10 @@ void CharacterManager::LoadCharacters(const QString& file)
 
 void CharacterManager::SaveCharacters(const QString& file)
 {
+	// Make a backup.
+	QFile::remove(file + ".bak");
+	QFile::copy(file, file + ".bak");
+
 	// Open the settings file.
 	QFile f(file);
 	if (f.open(QIODevice::WriteOnly))
