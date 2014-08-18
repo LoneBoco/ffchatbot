@@ -26,6 +26,7 @@ public:
 
 	void send_pm(const QString& jid, const QString& msg);
 	void send_to_all(const QString& msg);
+	void send_to_relay(const QString& msg);
 	void send_to_room(const QString& msg, QXmppMucRoom* room);
 
 	QString roll_dice(const QString& dice, const QString& from);
