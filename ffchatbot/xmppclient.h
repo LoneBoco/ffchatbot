@@ -8,7 +8,7 @@
 #include <list>
 #include <QTimer>
 
-#define VERSION "[14.8.18.1]"
+#define VERSION "[14.8.20.0]"
 
 class XmppClient : public QXmppClient
 {
@@ -41,6 +41,7 @@ protected:
 	const QString _confserver;
 	QXmppMucManager* _muc_manager;
 	QTimer _reconnect_timer;
+	QTimer _save_timer;
 
 public slots:
 	void clientConnected();
@@ -51,6 +52,7 @@ public slots:
 	void muc_userLeft(const QString& jid);
 	void muc_error(const QXmppStanza::Error& err);
 	void muc_error_timeout();
+	void save_timeout();
 };
 
 #endif // XMPPCLIENT_H
