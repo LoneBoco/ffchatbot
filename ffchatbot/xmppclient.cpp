@@ -31,6 +31,11 @@ XmppClient::XmppClient(QObject *parent)
 
 	check = QObject::connect(&_reconnect_timer, SIGNAL(timeout()), SLOT(muc_error_timeout()));
 	Q_ASSERT(check);
+
+	check = QObject::connect(&_save_timer, SIGNAL(timeout()), SLOT(save_timeout()));
+	Q_ASSERT(check);
+
+	_save_timer.start(5 * 60 * 1000);	// 5 minutes
 }
 
 XmppClient::~XmppClient()
@@ -487,6 +492,11 @@ void XmppClient::muc_error_timeout()
 {
 	_reconnect_timer.stop();
 	this->connect(_character, _secret);
+}
+
+void XmppClient::save_timeout()
+{
+	CharacterManager::Instance().SaveCharacters("userdata.txt");
 }
 
 QString XmppClient::_getLoginMessage() const

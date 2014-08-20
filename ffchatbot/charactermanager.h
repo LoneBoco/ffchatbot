@@ -37,7 +37,7 @@ public:
 
 	QStringList GetInactives(int days);
 
-private:
+protected:
 	CharacterManager();
 
 	static CharacterManager* _instance;
