@@ -31,6 +31,7 @@ public:
 	void SaveCharacters(const QString& file);
 
 	TCharIter AddNewCharacter(const QString& name);
+	bool RemoveCharacter(const QString& name);
 
 	void SetLastSeen(const QString& name, time_t lastseen);
 	void SetZone(const QString& name, uint32_t zone);

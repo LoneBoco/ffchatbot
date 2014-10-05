@@ -292,6 +292,8 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 			send_pm(message.from(), "roll xdy: Rolls x number of y-sided dice. (ex, 1d6).  Can be used publically.");
 		else if (m == "help listinactive")
 			send_pm(message.from(), "listinactive <days>: Lists players who haven't logged in for the given number of days.");
+		else if (m == "help removeuser")
+			send_pm(message.from(), "removeuser <user>: Removes a user from the tracking list.");
 		return;
 	}
 
@@ -364,6 +366,21 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		list = list.remove(list.length() - 2, 2);
 
 		send_pm(message.from(), list);
+		return;
+	}
+
+	// Remove a user from tracking.
+	if (m.startsWith("removeuser ", Qt::CaseInsensitive))
+	{
+		QStringList list = m.split(' ', QString::SkipEmptyParts);
+		if (list.length() != 2)
+			return;
+
+		bool success = CharacterManager::Instance().RemoveCharacter(list[1]);
+		if (success)
+			send_pm(message.from(), QString("Successfully removed ") + list[1]);
+		else send_pm(message.from(), QString("Could not find ") + list[1]);
+
 		return;
 	}
 

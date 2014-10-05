@@ -97,6 +97,18 @@ TCharIter CharacterManager::AddNewCharacter(const QString& name)
 	return ret.first;
 }
 
+bool CharacterManager::RemoveCharacter(const QString& name)
+{
+	auto i = _characters.find(name);
+	if (i != _characters.end())
+	{
+		_characters.erase(i);
+		return true;
+	}
+
+	return false;
+}
+
 void CharacterManager::SetLastSeen(const QString& name, time_t lastseen)
 {
 	auto i = _characters.find(name);
