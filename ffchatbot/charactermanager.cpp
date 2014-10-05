@@ -84,22 +84,23 @@ void CharacterManager::SaveCharacters(const QString& file)
 
 TCharIter CharacterManager::AddNewCharacter(const QString& name)
 {
-	auto i = _characters.find(name);
+	QString uname = name.toUpper();
+	auto i = _characters.find(uname);
 	if (i != _characters.end())
 		return i;
 
 	SCharacterDetails c;
-	c.Name = name;
+	c.Name = uname;
 	c.LastSeen = 0;
 	c.Zone = 0;
 
-	std::pair<TCharIter, bool> ret = _characters.insert(std::make_pair(name, c));
+	std::pair<TCharIter, bool> ret = _characters.insert(std::make_pair(uname, c));
 	return ret.first;
 }
 
 bool CharacterManager::RemoveCharacter(const QString& name)
 {
-	auto i = _characters.find(name);
+	auto i = _characters.find(name.toUpper());
 	if (i != _characters.end())
 	{
 		_characters.erase(i);
@@ -111,18 +112,20 @@ bool CharacterManager::RemoveCharacter(const QString& name)
 
 void CharacterManager::SetLastSeen(const QString& name, time_t lastseen)
 {
-	auto i = _characters.find(name);
+	QString uname = name.toUpper();
+	auto i = _characters.find(uname);
 	if (i == _characters.end())
-		i = AddNewCharacter(name);
+		i = AddNewCharacter(uname);
 
 	i->second.LastSeen = lastseen;
 }
 
 void CharacterManager::SetZone(const QString& name, uint32_t zone)
 {
-	auto i = _characters.find(name);
+	QString uname = name.toUpper();
+	auto i = _characters.find(uname);
 	if (i == _characters.end())
-		i = AddNewCharacter(name);
+		i = AddNewCharacter(uname);
 
 	i->second.Zone = zone;
 }
