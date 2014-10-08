@@ -53,7 +53,7 @@ void XmppClient::connect(const QString& character, const QString& secret)
 	_character = character;
 	_secret = secret;
 
-	QString JID = character.toUpper() + "@" + _jidserver;
+	QString JID = character.toLower() + "@" + _jidserver;
 	QXmppConfiguration& config = this->configuration();
 	config.setResource("firefall");
 	config.setHost(_server);
@@ -131,7 +131,6 @@ void XmppClient::send_pm(const QString& jid, const QString& msg)
 	QString msg2 = msg;
 	while (msg2.count() != 0)
 	{
-
 		// Message element.
 		QXmppElement message;
 		message.setTagName("message");
