@@ -29,7 +29,8 @@ LIBS += $$QXMPP_INTERNAL_LIBS
 TARGET = $$QXMPP_LIBRARY_NAME
 VERSION = $$QXMPP_VERSION
 win32 {
-    DESTDIR = $$OUT_PWD
+	DESTDIR = $$PWD/../../bin
+	#DESTDIR = $$OUT_PWD
 }
 
 include(base/base.pri)
