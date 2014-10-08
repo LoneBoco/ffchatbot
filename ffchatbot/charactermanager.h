@@ -11,6 +11,7 @@
 struct SCharacterDetails
 {
 	QString Name;
+	QString Army;
 	time_t LastSeen;
 	uint32_t Zone;
 };
@@ -30,13 +31,13 @@ public:
 	void LoadCharacters(const QString& file);
 	void SaveCharacters(const QString& file);
 
-	TCharIter AddNewCharacter(const QString& name);
+	TCharIter AddNewCharacter(const QString& name, const QString& army);
 	bool RemoveCharacter(const QString& name);
 
-	void SetLastSeen(const QString& name, time_t lastseen);
-	void SetZone(const QString& name, uint32_t zone);
+	void SetLastSeen(const QString& name, const QString& army, time_t lastseen);
+	void SetZone(const QString& name, const QString& army, uint32_t zone);
 
-	QStringList GetInactives(int days);
+	QStringList GetInactives(int days, const QString& army);
 
 protected:
 	CharacterManager();

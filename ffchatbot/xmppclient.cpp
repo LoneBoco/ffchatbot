@@ -290,7 +290,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		else if (m == "help roll")
 			send_pm(message.from(), "roll xdy: Rolls x number of y-sided dice. (ex, 1d6).  Can be used publically.");
 		else if (m == "help listinactive")
-			send_pm(message.from(), "listinactive <days>: Lists players who haven't logged in for the given number of days.");
+			send_pm(message.from(), "listinactive <army> <days>: Lists players who haven't logged in for the given number of days.");
 		else if (m == "help removeuser")
 			send_pm(message.from(), "removeuser <user>: Removes a user from the tracking list.");
 		return;
@@ -351,15 +351,24 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	// List inactive players.
 	if (m.startsWith("listinactive ", Qt::CaseInsensitive))
 	{
-		int days = m.mid(13).trimmed().toInt();
+		QStringList parts = m.split(' ', QString::SkipEmptyParts);
+		if (parts.length() != 3)
+			return;
+
+		QString army = parts[1];
+		int days = parts[2].trimmed().toInt();
 		if (days < 1) days = 1;
 
 		QString list("Users inactive for ");
 		list.append(QString::number(days));
-		if (days == 1) list.append(" day: ");
-		else list.append(" days: ");
+		if (days == 1) list.append(" day");
+		else list.append(" days");
 
-		QStringList inactives = CharacterManager::Instance().GetInactives(days);
+		list.append("[");
+		list.append(army);
+		list.append("]: ");
+
+		QStringList inactives = CharacterManager::Instance().GetInactives(days, army);
 		for (QString c: inactives)
 			list.append(c + ", ");
 		list = list.remove(list.length() - 2, 2);
@@ -443,11 +452,11 @@ void XmppClient::muc_userJoined(const QString& jid)
 	if (user.toUpper() == _character.toUpper())
 		return;
 
-	// Record the last seen time of this user.
-	CharacterManager::Instance().SetLastSeen(user, QDateTime::currentDateTime().toTime_t());
-
 	QString prefix = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(room->jid()));
 	QString message = "[" + prefix + "] " + user + " has logged in.";
+
+	// Record the last seen time of this user.
+	CharacterManager::Instance().SetLastSeen(user, prefix, QDateTime::currentDateTime().toTime_t());
 
 	// Loop through each room informing of the user's status.
 	for (auto r: _muc_manager->rooms())
@@ -476,11 +485,11 @@ void XmppClient::muc_userLeft(const QString& jid)
 	if (user.toUpper() == _character.toUpper())
 		return;
 
-	// Record the last seen time of this user.
-	CharacterManager::Instance().SetLastSeen(user, QDateTime::currentDateTime().toTime_t());
-
 	QString prefix = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(room->jid()));
 	QString message = "[" + prefix + "] " + user + " has signed out.";
+
+	// Record the last seen time of this user.
+	CharacterManager::Instance().SetLastSeen(user, prefix, QDateTime::currentDateTime().toTime_t());
 
 	// Loop through each room informing of the user's status.
 	for (auto r: _muc_manager->rooms())
