@@ -39,8 +39,11 @@ void CharacterManager::LoadCharacters(const QString& file)
 			c.Zone = 0;
 
 			QJsonObject o = i.value().toObject();
+			auto army = o.find("army");
 			auto lastseen = o.find("lastseen");
 			auto zone = o.find("zone");
+			if (army != o.end())
+				c.Army = army.value().toString();
 			if (lastseen != o.end())
 				c.LastSeen = (time_t)lastseen.value().toDouble();
 			if (zone != o.end())
@@ -65,10 +68,12 @@ void CharacterManager::SaveCharacters(const QString& file)
 
 		for (TCharIter i = _characters.begin(); i != _characters.end(); ++i)
 		{
+			QJsonValue army(i->second.Army);
 			QJsonValue lastseen((int)i->second.LastSeen);
 			QJsonValue zone((int)i->second.Zone);
 
 			QJsonObject data;
+			data.insert("army", army);
 			data.insert("lastseen", lastseen);
 			data.insert("zone", zone);
 
@@ -82,7 +87,7 @@ void CharacterManager::SaveCharacters(const QString& file)
 	}
 }
 
-TCharIter CharacterManager::AddNewCharacter(const QString& name)
+TCharIter CharacterManager::AddNewCharacter(const QString& name, const QString& army)
 {
 	QString uname = name.toUpper();
 	auto i = _characters.find(uname);
@@ -91,6 +96,7 @@ TCharIter CharacterManager::AddNewCharacter(const QString& name)
 
 	SCharacterDetails c;
 	c.Name = uname;
+	c.Army = army;
 	c.LastSeen = 0;
 	c.Zone = 0;
 
@@ -110,32 +116,35 @@ bool CharacterManager::RemoveCharacter(const QString& name)
 	return false;
 }
 
-void CharacterManager::SetLastSeen(const QString& name, time_t lastseen)
+void CharacterManager::SetLastSeen(const QString& name, const QString& army, time_t lastseen)
 {
 	QString uname = name.toUpper();
 	auto i = _characters.find(uname);
 	if (i == _characters.end())
-		i = AddNewCharacter(uname);
+		i = AddNewCharacter(uname, army);
 
 	i->second.LastSeen = lastseen;
 }
 
-void CharacterManager::SetZone(const QString& name, uint32_t zone)
+void CharacterManager::SetZone(const QString& name, const QString& army, uint32_t zone)
 {
 	QString uname = name.toUpper();
 	auto i = _characters.find(uname);
 	if (i == _characters.end())
-		i = AddNewCharacter(uname);
+		i = AddNewCharacter(uname, army);
 
 	i->second.Zone = zone;
 }
 
-QStringList CharacterManager::GetInactives(int days)
+QStringList CharacterManager::GetInactives(int days, const QString& army)
 {
 	QStringList ret;
 
 	for (auto i = _characters.begin(); i != _characters.end(); ++i)
 	{
+		if (i->second.Army != army)
+			continue;
+
 		QDateTime lastseen = QDateTime::fromTime_t(i->second.LastSeen);
 		if (lastseen.addDays(days) > QDateTime::currentDateTime())
 			continue;
