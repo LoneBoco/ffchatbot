@@ -29,11 +29,16 @@ public:
 
 	void Cleanup();
 
+	bool LoadMOTD(const QString& file);
+	bool SaveMOTD(const QString& file) const;
+
 	int LoadCharacters(const QString& file);
 
 	QString GetCharacterChannel(const QString& name);
 
 	void SendMessage(const QString& from, const QString& msg);
+
+	QString MOTD;
 
 private:
 	ConnectionManager();

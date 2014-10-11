@@ -31,6 +31,37 @@ void ConnectionManager::Cleanup()
 	_connections.clear();
 }
 
+bool ConnectionManager::LoadMOTD(const QString& file)
+{
+	QFile f(file);
+	if (f.open(QIODevice::ReadOnly))
+	{
+		// Load the data from the settings file.
+		QByteArray filedata = f.readAll();
+		f.close();
+
+		MOTD = QString(filedata);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool ConnectionManager::SaveMOTD(const QString& file) const
+{
+	QFile f(file);
+	if (f.open(QIODevice::WriteOnly))
+	{
+		f.write(file.toUtf8());
+		f.close();
+
+		return true;
+	}
+
+	return false;
+}
+
 int ConnectionManager::LoadCharacters(const QString &file)
 {
 	int loaded = 0;
