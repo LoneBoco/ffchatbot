@@ -53,7 +53,7 @@ bool ConnectionManager::SaveMOTD(const QString& file) const
 	QFile f(file);
 	if (f.open(QIODevice::WriteOnly))
 	{
-		f.write(file.toUtf8());
+		f.write(MOTD.toUtf8());
 		f.close();
 
 		return true;
