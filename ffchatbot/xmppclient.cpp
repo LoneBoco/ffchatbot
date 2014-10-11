@@ -274,7 +274,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		if (m == "help")
 		{
-			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, listrooms, listinactive, join, leave, roll";
+			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, removeuser, listrooms, listinactive, join, leave, roll, setmotd";
 			send_pm(message.from(), msg);
 		}
 		else if (m == "help version")
@@ -293,6 +293,8 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 			send_pm(message.from(), "listinactive <army> <days>: Lists players who haven't logged in for the given number of days.");
 		else if (m == "help removeuser")
 			send_pm(message.from(), "removeuser <user>: Removes a user from the tracking list.");
+		else if (m == "help setmotd")
+			send_pm(message.from(), "setmotd <message>: Sets the message of the day.");
 		return;
 	}
 
@@ -322,7 +324,10 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		QStringList list = m.split(' ', QString::SkipEmptyParts);
 		if (list.length() != 3)
+		{
+			send_pm(message.from(), "Invalid arguments.");
 			return;
+		}
 
 		PrefixManager::Instance().add_prefix(list[2], list[1]);
 		add_channel(list[1]);
@@ -334,7 +339,10 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		QStringList list = m.split(' ', QString::SkipEmptyParts);
 		if (list.length() != 2)
+		{
+			send_pm(message.from(), "Invalid arguments.");
 			return;
+		}
 
 		QString c = PrefixManager::Instance().remove_prefix(list[1]);
 		remove_channel(c);
@@ -353,7 +361,10 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		QStringList parts = m.split(' ', QString::SkipEmptyParts);
 		if (parts.length() != 3)
+		{
+			send_pm(message.from(), "Invalid arguments.");
 			return;
+		}
 
 		QString army = parts[1];
 		int days = parts[2].trimmed().toInt();
@@ -364,7 +375,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		if (days == 1) list.append(" day");
 		else list.append(" days");
 
-		list.append("[");
+		list.append(" [");
 		list.append(army);
 		list.append("]: ");
 
@@ -382,12 +393,30 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		QStringList list = m.split(' ', QString::SkipEmptyParts);
 		if (list.length() != 2)
+		{
+			send_pm(message.from(), "Invalid arguments.");
 			return;
+		}
 
 		bool success = CharacterManager::Instance().RemoveCharacter(list[1]);
 		if (success)
 			send_pm(message.from(), QString("Successfully removed ") + list[1]);
 		else send_pm(message.from(), QString("Could not find ") + list[1]);
+
+		return;
+	}
+
+	// Sets the MOTD.
+	if (m.startsWith("setmotd", Qt::CaseInsensitive))
+	{
+		QString motd = m.mid(7).trimmed();
+
+		ConnectionManager::Instance().MOTD = motd;
+		ConnectionManager::Instance().SaveMOTD("motd.txt");
+
+		if (motd.isEmpty())
+			send_pm(message.from(), "Removed the message of the day.");
+		else send_pm(message.from(), "Saved the new message of the day.");
 
 		return;
 	}
@@ -471,6 +500,10 @@ void XmppClient::muc_userJoined(const QString& jid)
 
 	// Send the user a list of everybody online.
 	send_pm(jid, _getLoginMessage());
+
+	// Send the MOTD.
+	if (!ConnectionManager::Instance().MOTD.isEmpty())
+		send_pm(jid, QString("[MOTD] ") + ConnectionManager::Instance().MOTD);
 }
 
 void XmppClient::muc_userLeft(const QString& jid)

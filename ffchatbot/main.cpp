@@ -57,12 +57,16 @@ int main(int argc, char *argv[])
 	// Load our saved user data.
 	CharacterManager::Instance().LoadCharacters("userdata.txt");
 
+	// Load MOTD.
+	ConnectionManager::Instance().LoadMOTD("motd.txt");
+
 	// Run.
     app->exec();
 	delete app;
 
 	// Cleanup.
 	ConnectionManager::Instance().Cleanup();
+	ConnectionManager::Instance().SaveMOTD("motd.txt");
 	CharacterManager::Instance().SaveCharacters("userdata.txt");
 
     return (int)ERETURN::OK;
@@ -75,6 +79,7 @@ void terminate(int)
 
 	// Cleanup.
 	ConnectionManager::Instance().Cleanup();
+	ConnectionManager::Instance().SaveMOTD("motd.txt");
 	CharacterManager::Instance().SaveCharacters("userdata.txt");
 
 	exit(0);

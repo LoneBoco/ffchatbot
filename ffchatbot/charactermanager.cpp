@@ -142,7 +142,7 @@ QStringList CharacterManager::GetInactives(int days, const QString& army)
 
 	for (auto i = _characters.begin(); i != _characters.end(); ++i)
 	{
-		if (i->second.Army != army)
+		if (i->second.Army.toUpper() != army.toUpper())
 			continue;
 
 		QDateTime lastseen = QDateTime::fromTime_t(i->second.LastSeen);
