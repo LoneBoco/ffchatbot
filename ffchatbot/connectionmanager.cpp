@@ -169,7 +169,7 @@ QStringList ConnectionManager::BuildLoginMessage() const
 		if (ext.count() == 0)
 			continue;
 
-		QXmppMucManager* muc = reinterpret_cast<QXmppMucManager*>(ext.at(0));
+		QXmppMucManager* muc = detail.Client->findExtension<QXmppMucManager>();
 		if (muc == nullptr)
 			continue;
 
