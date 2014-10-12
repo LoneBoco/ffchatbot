@@ -11,6 +11,7 @@
 
 #include "xmppclient.h"
 #include "QXmppMucManager.h"
+#include "QXmppUtils.h"
 
 
 ConnectionManager* ConnectionManager::_instance = nullptr;
@@ -152,6 +153,58 @@ void ConnectionManager::SendMessage(const QString& from, const QString& msg)
 		std::shared_ptr<XmppClient> client = i->second.Client;
 		client->send_to_all(msg);
 	}
+}
+
+QStringList ConnectionManager::BuildLoginMessage() const
+{
+	QStringList ret;
+
+	// Construct user list.
+	QString message;
+	int total_users = 0;
+	for (auto& kv: _connections)
+	{
+		const SConnectionDetails& detail = kv.second;
+		auto ext = detail.Client->extensions();
+		if (ext.count() == 0)
+			continue;
+
+		QXmppMucManager* muc = reinterpret_cast<QXmppMucManager*>(ext.at(0));
+		if (muc == nullptr)
+			continue;
+
+		for (auto r: muc->rooms())
+		{
+			QString p = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(r->jid()));
+			auto participants = r->participants();
+			if (participants.length() > 1)
+			{
+				total_users += participants.length() - 1;
+				message.append(". ");
+				message.append("[" + p + "]: ");
+				for (auto j = participants.begin(); j != participants.end(); ++j)
+				{
+					// Don't count myself.
+					QString cu = QXmppUtils::jidToResource(*j);
+					if (cu.toUpper() == detail.Name.toUpper())
+						continue;
+
+					message.append(cu);
+					message.append(", ");
+				}
+				message.remove(message.length() - 2, 2);
+			}
+		}
+	}
+
+	// Add user list.
+	message.insert(0, "Users online [" + QString::number(total_users) + "]");
+	ret.append(message);
+
+	// Add MOTD.
+	ret.append(QString("[MOTD] " + MOTD));
+
+	return ret;
 }
 
 QString ConnectionManager::buildGUID(const QString &email, const QString &password)
