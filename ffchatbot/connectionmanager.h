@@ -38,6 +38,8 @@ public:
 
 	void SendMessage(const QString& from, const QString& msg);
 
+	QStringList BuildLoginMessage() const;
+
 	QString MOTD;
 
 private:

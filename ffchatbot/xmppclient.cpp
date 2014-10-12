@@ -308,7 +308,8 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	// Returns the player listing.
 	if (m == "listonline" || m == "listusers")
 	{
-		send_pm(message.from(), _getLoginMessage());
+		QStringList login_messages = ConnectionManager::Instance().BuildLoginMessage();
+		send_pm(message.from(), login_messages.at(0));
 		return;
 	}
 
@@ -465,7 +466,8 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 
 	if (m == "!listusers" || m == "!listonline")
 	{
-		send_pm(message.from(), _getLoginMessage());
+		QStringList login_messages = ConnectionManager::Instance().BuildLoginMessage();
+		send_pm(message.from(), login_messages.at(0));
 	}
 }
 
@@ -498,12 +500,12 @@ void XmppClient::muc_userJoined(const QString& jid)
 	}
 	ConnectionManager::Instance().SendMessage(_character, message);
 
-	// Send the user a list of everybody online.
-	send_pm(jid, _getLoginMessage());
-
-	// Send the MOTD.
-	if (!ConnectionManager::Instance().MOTD.isEmpty())
-		send_pm(jid, QString("[MOTD] ") + ConnectionManager::Instance().MOTD);
+	// Send login messages.
+	QStringList login_messages = ConnectionManager::Instance().BuildLoginMessage();
+	for (QString msg: login_messages)
+	{
+		send_pm(jid, msg);
+	}
 }
 
 void XmppClient::muc_userLeft(const QString& jid)
@@ -555,34 +557,4 @@ void XmppClient::muc_error_timeout()
 void XmppClient::save_timeout()
 {
 	CharacterManager::Instance().SaveCharacters("userdata.txt");
-}
-
-QString XmppClient::_getLoginMessage() const
-{
-	QString message;
-	int total_users = 0;
-	for (auto r: _muc_manager->rooms())
-	{
-		QString p = PrefixManager::Instance().get_prefix(QXmppUtils::jidToUser(r->jid()));
-		auto participants = r->participants();
-		if (participants.length() > 1)
-		{
-			total_users += participants.length() - 1;
-			message.append(". ");
-			message.append("[" + p + "]: ");
-			for (auto j = participants.begin(); j != participants.end(); ++j)
-			{
-				// Don't count myself.
-				QString cu = QXmppUtils::jidToResource(*j);
-				if (cu.toUpper() == _character.toUpper())
-					continue;
-
-				message.append(cu);
-				message.append(", ");
-			}
-			message.remove(message.length() - 2, 2);
-		}
-	}
-	message.insert(0, "Users online [" + QString::number(total_users) + "]");
-	return message;
 }
