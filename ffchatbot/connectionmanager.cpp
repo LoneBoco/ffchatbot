@@ -202,7 +202,8 @@ QStringList ConnectionManager::BuildLoginMessage() const
 	ret.append(message);
 
 	// Add MOTD.
-	ret.append(QString("[MOTD] " + MOTD));
+	if (!MOTD.isEmpty())
+		ret.append(QString("[MOTD] " + MOTD));
 
 	return ret;
 }

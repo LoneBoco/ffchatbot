@@ -411,6 +411,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	if (m.startsWith("setmotd", Qt::CaseInsensitive))
 	{
 		QString motd = m.mid(7).trimmed();
+		motd += QString(" [set by ") + from + "]";
 
 		ConnectionManager::Instance().MOTD = motd;
 		ConnectionManager::Instance().SaveMOTD("motd.txt");
