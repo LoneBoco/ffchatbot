@@ -258,7 +258,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		return;
 
 	// See who it is from.  If it is from ourself, don't respond to it.
-	QString from = QXmppUtils::jidToResource(message.from());
+	QString from = QXmppUtils::jidToUser(message.from());
 	if (from.isEmpty() || from.toUpper() == _character.toUpper())
 		return;
 
