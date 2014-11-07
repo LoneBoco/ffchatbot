@@ -274,7 +274,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	{
 		if (m == "help")
 		{
-			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, removeuser, listrooms, listinactive, join, leave, roll, setmotd";
+			QString msg = "Commands (use help <command> for detailed help): version, listonline/listusers, removeuser, setaccess, listrooms, listinactive, info, join, leave, roll, setmotd";
 			send_pm(message.from(), msg);
 		}
 		else if (m == "help version")
