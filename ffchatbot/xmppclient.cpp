@@ -280,23 +280,29 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		else if (m == "help version")
 			send_pm(message.from(), "Gets the FFChatBot version information.");
 		else if (m == "help listonline" || m == "help listusers")
-			send_pm(message.from(), "Gets a list of all online users.");
+			send_pm(message.from(), "[!] Gets a list of all online users.");
 		else if (m == "help listrooms")
 			send_pm(message.from(), "Gets a list of all joined rooms.");
 		else if (m == "help join")
-			send_pm(message.from(), "join <room> <alias>: Joins the given room.");
+			send_pm(message.from(), "[10] join <room> <alias>: Joins the given room.");
 		else if (m == "help leave")
-			send_pm(message.from(), "leave <alias>: Leaves the given room.");
+			send_pm(message.from(), "[10] leave <alias>: Leaves the given room.");
 		else if (m == "help roll")
-			send_pm(message.from(), "roll xdy: Rolls x number of y-sided dice. (ex, 1d6).  Can be used publically.");
+			send_pm(message.from(), "[!] roll xdy: Rolls x number of y-sided dice. (ex, 1d6).");
 		else if (m == "help listinactive")
 			send_pm(message.from(), "listinactive <army> <days>: Lists players who haven't logged in for the given number of days.");
+		else if (m == "help info")
+			send_pm(message.from(), "[!] info <user>: Gets the stored info on the user.");
 		else if (m == "help removeuser")
-			send_pm(message.from(), "removeuser <user>: Removes a user from the tracking list.");
+			send_pm(message.from(), "[10] removeuser <user>: Removes a user from the tracking list.");
 		else if (m == "help setmotd")
-			send_pm(message.from(), "setmotd <message>: Sets the message of the day.");
+			send_pm(message.from(), "[1] setmotd <message>: Sets the message of the day.");
+		else if (m == "help setaccess")
+			send_pm(message.from(), "setaccess <user> <level>: Sets the access level for a user.");
 		return;
 	}
+
+	int accesslevel = CharacterManager::Instance().GetAccessLevel(from);
 
 	// Version listing.
 	if (m == "version")
@@ -323,6 +329,12 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	// Join a room.
 	if (m.startsWith("join ", Qt::CaseInsensitive))
 	{
+		if (accesslevel < 10)
+		{
+			send_pm(message.from(), "Access denied.");
+			return;
+		}
+
 		QStringList list = m.split(' ', QString::SkipEmptyParts);
 		if (list.length() != 3)
 		{
@@ -338,6 +350,12 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	// Leave a room.
 	if (m.startsWith("leave ", Qt::CaseInsensitive))
 	{
+		if (accesslevel < 10)
+		{
+			send_pm(message.from(), "Access denied.");
+			return;
+		}
+
 		QStringList list = m.split(' ', QString::SkipEmptyParts);
 		if (list.length() != 2)
 		{
@@ -392,6 +410,12 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	// Remove a user from tracking.
 	if (m.startsWith("removeuser ", Qt::CaseInsensitive))
 	{
+		if (accesslevel < 10)
+		{
+			send_pm(message.from(), "Access denied.");
+			return;
+		}
+
 		QStringList list = m.split(' ', QString::SkipEmptyParts);
 		if (list.length() != 2)
 		{
@@ -410,6 +434,12 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 	// Sets the MOTD.
 	if (m.startsWith("setmotd", Qt::CaseInsensitive))
 	{
+		if (accesslevel < 1)
+		{
+			send_pm(message.from(), "Access denied.");
+			return;
+		}
+
 		QString motd = m.mid(7).trimmed();
 		motd += QString(" [set by ") + from + "]";
 
@@ -419,6 +449,48 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 		if (motd.isEmpty())
 			send_pm(message.from(), "Removed the message of the day.");
 		else send_pm(message.from(), "Saved the new message of the day.");
+
+		return;
+	}
+
+	// Gets information about a player.
+	if (m.startsWith("info", Qt::CaseInsensitive))
+	{
+		QStringList list = m.split(' ', QString::SkipEmptyParts);
+		if (list.length() != 2)
+		{
+			send_pm(message.from(), "Invalid arguments.");
+			return;
+		}
+
+		send_pm(message.from(), CharacterManager::Instance().GetInfo(list[1]));
+		return;
+	}
+
+	// Sets the access level of a user.
+	if (m.startsWith("setaccess", Qt::CaseInsensitive))
+	{
+		QStringList list = m.split(' ', QString::SkipEmptyParts);
+		if (list.length() != 3)
+		{
+			send_pm(message.from(), "Invalid arguments.");
+			return;
+		}
+
+		QString user = list[1].trimmed();
+		int level = list[2].trimmed().toInt();
+
+		// Don't let users promote above or to their level.
+		if (level < 0 || level >= accesslevel)
+		{
+			send_pm(message.from(), QString("You cannot promote users to levels ") + QString::number(accesslevel) + "+.");
+			return;
+		}
+
+		bool success = CharacterManager::Instance().SetAccessLevel(user, level);
+		if (success)
+			send_pm(message.from(), QString("Successfully set access level of ") + user + " to " + QString::number(accesslevel));
+		else send_pm(message.from(), QString("Failed to find user ") + user);
 
 		return;
 	}
@@ -460,15 +532,30 @@ void XmppClient::muc_messageReceived(const QXmppMessage& message)
 	QString m = message.body();
 
 	// See if it is a public command.
-	if (m.startsWith("!roll "))
+	if (m.startsWith("!roll ", Qt::CaseInsensitive))
 	{
 		send_to_relay(roll_dice(m.mid(6).trimmed(), from));
+		return;
 	}
 
 	if (m == "!listusers" || m == "!listonline")
 	{
 		QStringList login_messages = ConnectionManager::Instance().BuildLoginMessage();
 		send_pm(message.from(), login_messages.at(0));
+		return;
+	}
+
+	if (m.startsWith("!info", Qt::CaseInsensitive))
+	{
+		QStringList list = m.split(' ', QString::SkipEmptyParts);
+		if (list.length() != 2)
+		{
+			send_pm(message.from(), "Invalid arguments.");
+			return;
+		}
+
+		send_pm(message.from(), CharacterManager::Instance().GetInfo(list[1]));
+		return;
 	}
 }
 

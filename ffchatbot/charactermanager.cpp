@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <QFile>
 #include <QDateTime>
+#include <QTextStream>
 
 #include "charactermanager.h"
 
@@ -36,18 +37,18 @@ void CharacterManager::LoadCharacters(const QString& file)
 			SCharacterDetails c;
 			c.Name = i.key();
 			c.LastSeen = 0;
-			c.Zone = 0;
+			c.AccessLevel = 0;
 
 			QJsonObject o = i.value().toObject();
 			auto army = o.find("army");
 			auto lastseen = o.find("lastseen");
-			auto zone = o.find("zone");
+			auto accesslevel = o.find("accesslevel");
 			if (army != o.end())
 				c.Army = army.value().toString();
 			if (lastseen != o.end())
 				c.LastSeen = (time_t)lastseen.value().toDouble();
-			if (zone != o.end())
-				c.Zone = (uint32_t)zone.value().toDouble();
+			if (accesslevel != o.end())
+				c.AccessLevel = (int32_t)accesslevel.value().toDouble();
 
 			_characters.insert(std::make_pair(c.Name, c));
 		}
@@ -70,12 +71,12 @@ void CharacterManager::SaveCharacters(const QString& file)
 		{
 			QJsonValue army(i->second.Army);
 			QJsonValue lastseen((int)i->second.LastSeen);
-			QJsonValue zone((int)i->second.Zone);
+			QJsonValue accesslevel((int)i->second.AccessLevel);
 
 			QJsonObject data;
 			data.insert("army", army);
 			data.insert("lastseen", lastseen);
-			data.insert("zone", zone);
+			data.insert("accesslevel", accesslevel);
 
 			out.insert(i->first, data);
 		}
@@ -98,7 +99,7 @@ TCharIter CharacterManager::AddNewCharacter(const QString& name, const QString& 
 	c.Name = uname;
 	c.Army = army;
 	c.LastSeen = 0;
-	c.Zone = 0;
+	c.AccessLevel = 0;
 
 	std::pair<TCharIter, bool> ret = _characters.insert(std::make_pair(uname, c));
 	return ret.first;
@@ -126,17 +127,28 @@ void CharacterManager::SetLastSeen(const QString& name, const QString& army, tim
 	i->second.LastSeen = lastseen;
 }
 
-void CharacterManager::SetZone(const QString& name, const QString& army, uint32_t zone)
+bool CharacterManager::SetAccessLevel(const QString& name, int32_t access)
 {
 	QString uname = name.toUpper();
 	auto i = _characters.find(uname);
 	if (i == _characters.end())
-		i = AddNewCharacter(uname, army);
+		return false;
 
-	i->second.Zone = zone;
+	i->second.AccessLevel = access;
+	return true;
 }
 
-QStringList CharacterManager::GetInactives(int days, const QString& army)
+int CharacterManager::GetAccessLevel(const QString &name) const
+{
+	QString uname = name.toUpper();
+	auto i = _characters.find(uname);
+	if (i == _characters.end())
+		return 0;
+
+	return i->second.AccessLevel;
+}
+
+QStringList CharacterManager::GetInactives(int days, const QString& army) const
 {
 	QStringList ret;
 
@@ -151,6 +163,23 @@ QStringList CharacterManager::GetInactives(int days, const QString& army)
 
 		ret.append(i->second.Name);
 	}
+
+	return ret;
+}
+
+QString CharacterManager::GetInfo(const QString& name) const
+{
+	QString uname = name.toUpper();
+	auto i = _characters.find(uname);
+	if (i == _characters.end())
+		return "Player not found.";
+
+	QDateTime lastseen = QDateTime::fromTime_t(i->second.LastSeen);
+
+	QString ret;
+	QTextStream(&ret) << "[" << i->second.Army << "] " << i->second.Name
+					  << ": Access " << i->second.AccessLevel
+					  << ", last seen: " << lastseen.toString(Qt::TextDate);
 
 	return ret;
 }
