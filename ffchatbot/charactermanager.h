@@ -13,7 +13,7 @@ struct SCharacterDetails
 	QString Name;
 	QString Army;
 	time_t LastSeen;
-	uint32_t Zone;
+	int32_t AccessLevel;
 };
 
 typedef std::map<QString, SCharacterDetails>::iterator  TCharIter;
@@ -35,9 +35,12 @@ public:
 	bool RemoveCharacter(const QString& name);
 
 	void SetLastSeen(const QString& name, const QString& army, time_t lastseen);
-	void SetZone(const QString& name, const QString& army, uint32_t zone);
 
-	QStringList GetInactives(int days, const QString& army);
+	bool SetAccessLevel(const QString& name, int32_t access);
+	int GetAccessLevel(const QString& name) const;
+
+	QStringList GetInactives(int days, const QString& army) const;
+	QString GetInfo(const QString& name) const;
 
 protected:
 	CharacterManager();
