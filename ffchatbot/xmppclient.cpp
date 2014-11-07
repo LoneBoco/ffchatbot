@@ -489,7 +489,7 @@ void XmppClient::messageReceived(const QXmppMessage& message)
 
 		bool success = CharacterManager::Instance().SetAccessLevel(user, level);
 		if (success)
-			send_pm(message.from(), QString("Successfully set access level of ") + user + " to " + QString::number(accesslevel));
+			send_pm(message.from(), QString("Successfully set access level of ") + user + " to " + QString::number(level));
 		else send_pm(message.from(), QString("Failed to find user ") + user);
 
 		return;
