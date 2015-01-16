@@ -1,5 +1,1 @@
-MSVCP90.dll|ANSI_STRING* __fastcall ?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@@Z(ANSI_STRING* this,DWORD,ANSI_STRING* s)|DisplayName=append1
 MSVCP90.dll|ANSI_STRING* __fastcall ?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBD@Z(ANSI_STRING* this,DWORD,char const * s)|DisplayName=append2
-MSVCP90.dll|ANSI_STRING* __fastcall ?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBD0@Z(ANSI_STRING* this,DWORD,char const *,char const *)|DisplayName=append3
-MSVCP90.dll|ANSI_STRING* __fastcall ?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z(ANSI_STRING* this,DWORD,char const * s,unsigned int count)|DisplayName=append4
-MSVCP90.dll|ANSI_STRING* __fastcall ?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z(ANSI_STRING* this,DWORD,int count ,char ch[1])|DisplayName=append5
